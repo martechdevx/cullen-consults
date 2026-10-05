@@ -18,6 +18,11 @@ function normalizePath(pathname: string) {
   return segments.length ? `/${segments.join("/")}` : "/";
 }
 
+function getPublicPath(pathname: string) {
+  const path = normalizePath(pathname);
+  return path === "/" ? path : `${path}/`;
+}
+
 export function normalizeSiteOrigin(siteUrl?: string) {
   if (!siteUrl) return undefined;
   try {
@@ -144,7 +149,7 @@ export function renderSeoHead(pathname: string, configuredSiteUrl?: string) {
   const seo = getPageSeo(path);
   const origin = normalizeSiteOrigin(configuredSiteUrl);
   const indexable = !seo.noindex && isIndexableSite(configuredSiteUrl);
-  const canonical = origin && indexable ? new URL(path, origin).href : undefined;
+  const canonical = origin && indexable ? new URL(getPublicPath(path), origin).href : undefined;
   const imageUrl = origin ? new URL(seo.image, origin).href : undefined;
   const tags = [
     `<title>${escapeHtml(seo.title)}</title>`,
@@ -176,7 +181,7 @@ export function applyPageSeo(pathname: string, configuredSiteUrl: string | undef
   const seo = getPageSeo(path);
   const origin = normalizeSiteOrigin(configuredSiteUrl) ?? normalizeSiteOrigin(currentOrigin);
   const indexable = !seo.noindex && isIndexableSite(origin);
-  const canonical = origin && indexable ? new URL(path, origin).href : undefined;
+  const canonical = origin && indexable ? new URL(getPublicPath(path), origin).href : undefined;
   const imageUrl = origin ? new URL(seo.image, origin).href : undefined;
 
   document.title = seo.title;
@@ -242,6 +247,6 @@ export function getRobotsTxt(siteUrl?: string) {
 export function getSitemapXml(siteUrl?: string) {
   const origin = normalizeSiteOrigin(siteUrl);
   const paths = isIndexableSite(siteUrl) ? getSeoPaths() : [];
-  const urls = paths.map((path) => `  <url><loc>${new URL(path, origin).href}</loc></url>`).join("\n");
+  const urls = paths.map((path) => `  <url><loc>${new URL(getPublicPath(path), origin).href}</loc></url>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls ? `\n${urls}\n` : ""}</urlset>\n`;
 }
